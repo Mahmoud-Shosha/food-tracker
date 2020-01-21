@@ -12,21 +12,26 @@ app = Flask(__name__)
 
 def connect_db():
     """Returns a connection to the DB."""
+
     db = sqlite3.connect("data.db")
     db.row_factory = sqlite3.Row
+
     return db
 
 
 def get_db():
     """Returns the current the current DB connection."""
+
     if not hasattr(g, 'db'):
         g.db = connect_db()
+
     return g.db
 
 
 @app.teardown_appcontext
 def close_db(error):
     """Close the DB connection if exists when the application context ends."""
+
     if hasattr(g, 'db'):
         g.db.close()
 
