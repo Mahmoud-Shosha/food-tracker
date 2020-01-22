@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, g
+from flask import Flask, render_template, redirect, url_for, request, g
 import sqlite3
 
 
@@ -67,6 +67,9 @@ def foods():
     food to the app.
     """
 
+    # Creating a DB connection
+    db = get_db()
+
     if request.method == 'POST':
         # Getting the form data in local vars
         name = request.form['name']
@@ -78,13 +81,16 @@ def foods():
         # print("name: {}, protein: {}, carbohydrates: {}, fat: {}".format(
         #     name, protein, carbohydrates, fat))
         # Storing the form data in the DB
-        db = get_db()
         db.execute("""insert into food (name, protein, carbohydrates, fat, calories)
-                   values (?, ?, ?, ?, ?)""",
+                   values (?, ?, ?, ?, ?);""",
                    [name, protein, carbohydrates, fat, calories])
         db.commit()
-
-    return render_template('foods.html')
+        return redirect(url_for('foods'))
+    else:
+        # Getting all foods from the DB
+        cursor = db.execute("select * from food;")
+        foods = cursor.fetchall()
+        return render_template('foods.html', foods=foods)
 
 
 ###############################################################################
