@@ -13,7 +13,7 @@ app = Flask(__name__)
 def connect_db():
     """Returns a connection to the DB."""
 
-    db = sqlite3.connect("data.db")
+    db = sqlite3.connect("food_tracker.db")
     db.row_factory = sqlite3.Row
 
     return db
