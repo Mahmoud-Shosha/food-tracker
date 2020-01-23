@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, g
 import sqlite3
+from datetime import datetime
 
 
 # Create a flask app
@@ -43,21 +44,93 @@ def close_db(error):
 ###############################################################################
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def home():
     """Return the home page which list all days and a summary details."""
 
-    return render_template('home.html')
+    # Getting the DB connection
+    db = get_db()
+
+    if request.method == 'POST':
+        # Getting the form data in loacal vars
+        date = request.form['date']
+        date = datetime.strptime(date, '%Y-%m-%d')
+        database_date = datetime.strftime(date, '%Y%m%d')
+        # Debugging database_date in the console
+        # print(database_date)
+        # Storing the date in the DB
+        db.execute("insert into date_log (date_log) values (?);",
+                   [database_date])
+        db.commit()
+        # Redirecting to the home page after adding a date
+        return redirect(url_for('home'))
+    else:
+        # Getting all dates from the DB
+        cursor = db.execute("select date_log from  date_log;")
+        dates = cursor.fetchall()
+        template_dates = []    # dates formatted as needed in the template
+        # Formatting the date as needed in a conventient format
+        for date in dates:
+            date = datetime.strptime(str(date['date_log']), '%Y%m%d')
+            date = datetime.strftime(date, '%B %d, %Y')
+            template_dates.append(date)
+        # Debugging the needed date format in the console
+        # print(template_dates)
+        # Returning the home page with add dates in the DB
+        return render_template('home.html', dates=template_dates)
 
 
-@app.route('/day')
-def day():
+@app.route('/day/<date>', methods=['GET', 'POST'])
+def day(date):
     """
     Return the day page which list all data about food eaten in this day,
     and add new food to this day.
     """
 
-    return render_template('day.html')
+    # Getting the DB connection
+    db = get_db()
+
+    # Getting the date from the DB
+    cursor = db.execute("select * from date_log where date_log = ?;",
+                        [date])
+    date = cursor.fetchone()
+
+    if request.method == 'POST':
+        date_id = date['id']
+        food_id = request.form['food_item']
+        # Debugging date_id and food_id
+        # print(date_id, food_id)
+        # Storing the food to the date in the DB
+        db.execute("insert into date_food values (?, ?)", [date_id, food_id])
+        db.commit()
+        # Redirecting to the day page after adding a food to the date
+        return redirect(url_for('day', date=date['date_log']))
+    else:
+        # Formating the date as needed in the template
+        template_date = datetime.strptime(str(date['date_log']), "%Y%m%d")
+        template_date = datetime.strftime(template_date, "%B %d, %Y")
+        # Debugging the requested date in the console
+        # print(date['date_log'])
+        # Getting a list of foods in the DB
+        cursor = db.execute("select id, name from food;")
+        foods = cursor.fetchall()
+        # Getting the foods in this date
+        cursor = db.execute("""select food.name, food.protein, food.carbohydrates, food.fat, food.calories
+                            from date_food join food
+                            on food.id = date_food.food_id
+                            where date_food.date_log_id = ?""",
+                            [date['id']])
+        day_foods = cursor.fetchall()
+        # Calculating the totals  for protein, carbohydrates, fat, calories
+        totals = {'protein': 0, 'carbohydrates': 0, 'fat': 0, 'calories': 0}
+        for food in day_foods:
+            totals['protein'] += food['protein']
+            totals['carbohydrates'] += food['carbohydrates']
+            totals['fat'] += food['fat']
+            totals['calories'] += food['calories']
+        # Returning the day page with all the day detail
+        return render_template('day.html', date=template_date, foods=foods,
+                               day_foods=day_foods, totals=totals)
 
 
 @app.route('/foods', methods=['GET', 'POST'])
@@ -67,7 +140,7 @@ def foods():
     food to the app.
     """
 
-    # Creating a DB connection
+    # Getting the DB connection
     db = get_db()
 
     if request.method == 'POST':
@@ -85,11 +158,13 @@ def foods():
                    values (?, ?, ?, ?, ?);""",
                    [name, protein, carbohydrates, fat, calories])
         db.commit()
+        # Redirecting to the foods page after adding a food
         return redirect(url_for('foods'))
     else:
         # Getting all foods from the DB
         cursor = db.execute("select * from food;")
         foods = cursor.fetchall()
+        # Returning the foods page with all foods in the DB
         return render_template('foods.html', foods=foods)
 
 
