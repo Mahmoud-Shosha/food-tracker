@@ -66,14 +66,29 @@ def home():
         return redirect(url_for('home'))
     else:
         # Getting all dates from the DB
-        cursor = db.execute("select date_log from  date_log;")
+        cursor = db.execute("""select sum(food.protein) as protein,
+                            sum(food.carbohydrates) as carbohydrates,
+                            sum(food.fat) as fat,
+                            sum(food.calories) as calories,
+                            date_log.date_log as date
+                            from date_log left join date_food
+                            on date_food.date_log_id = date_log.id
+                            left join food on food.id = date_food.food_id
+                            group by date_log.id order by date_log.date_log desc""")
         dates = cursor.fetchall()
         template_dates = []    # dates formatted as needed in the template
         # Formatting the date as needed in a conventient format
         for date in dates:
-            pretty_date = datetime.strptime(str(date['date_log']), '%Y%m%d')
+            template_date = {}
+            template_date['protein'] = date['protein']
+            template_date['carbohydrates'] = date['carbohydrates']
+            template_date['fat'] = date['fat']
+            template_date['calories'] = date['calories']
+            template_date['date'] = date['date']
+            pretty_date = datetime.strptime(str(date['date']), '%Y%m%d')
             pretty_date = datetime.strftime(pretty_date, '%B %d, %Y')
-            template_dates.append({'pretty_date': pretty_date, 'date': date['date_log']})
+            template_date['pretty_date'] = pretty_date
+            template_dates.append(template_date)
         # Debugging the needed date format in the console
         # print(template_dates)
         # Returning the home page with add dates in the DB
@@ -109,7 +124,8 @@ def day(date):
         # Formating the date as needed in the template
         template_date = datetime.strptime(str(date['date_log']), "%Y%m%d")
         template_date = datetime.strftime(template_date, "%B %d, %Y")
-        template_date = {'template_date': template_date, 'date': date['date_log']}
+        template_date = {'template_date': template_date,
+                         'date': date['date_log']}
         # Debugging the requested date in the console
         # print(date['date_log'])
         # Getting a list of foods in the DB
