@@ -74,7 +74,8 @@ def home():
                             from date_log left join date_food
                             on date_food.date_log_id = date_log.id
                             left join food on food.id = date_food.food_id
-                            group by date_log.id order by date_log.date_log desc""")
+                            group by date_log.id
+                            order by date_log.date_log desc""")
         dates = cursor.fetchall()
         template_dates = []    # dates formatted as needed in the template
         # Formatting the date as needed in a conventient format
