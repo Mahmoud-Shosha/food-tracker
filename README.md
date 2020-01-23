@@ -11,7 +11,7 @@ The application consists of:
 
 - Python
 - Flask
-- DBMS
+- DBMS (sqlite3)
 - HTML, CSS, Bootstrap
 
 ## Installation
