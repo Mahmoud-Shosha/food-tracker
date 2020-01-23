@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, g
-import sqlite3
 from datetime import datetime
+from database import get_db
 
 
 # Create a flask app
@@ -9,24 +9,6 @@ app = Flask(__name__)
 
 # Database helper functions
 ###############################################################################
-
-
-def connect_db():
-    """Returns a connection to the DB."""
-
-    db = sqlite3.connect("food_tracker.db")
-    db.row_factory = sqlite3.Row
-
-    return db
-
-
-def get_db():
-    """Returns the current the current DB connection."""
-
-    if not hasattr(g, 'db'):
-        g.db = connect_db()
-
-    return g.db
 
 
 @app.teardown_appcontext
