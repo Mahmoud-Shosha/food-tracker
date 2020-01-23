@@ -71,9 +71,9 @@ def home():
         template_dates = []    # dates formatted as needed in the template
         # Formatting the date as needed in a conventient format
         for date in dates:
-            date = datetime.strptime(str(date['date_log']), '%Y%m%d')
-            date = datetime.strftime(date, '%B %d, %Y')
-            template_dates.append(date)
+            pretty_date = datetime.strptime(str(date['date_log']), '%Y%m%d')
+            pretty_date = datetime.strftime(pretty_date, '%B %d, %Y')
+            template_dates.append({'pretty_date': pretty_date, 'date': date['date_log']})
         # Debugging the needed date format in the console
         # print(template_dates)
         # Returning the home page with add dates in the DB
@@ -109,6 +109,7 @@ def day(date):
         # Formating the date as needed in the template
         template_date = datetime.strptime(str(date['date_log']), "%Y%m%d")
         template_date = datetime.strftime(template_date, "%B %d, %Y")
+        template_date = {'template_date': template_date, 'date': date['date_log']}
         # Debugging the requested date in the console
         # print(date['date_log'])
         # Getting a list of foods in the DB
