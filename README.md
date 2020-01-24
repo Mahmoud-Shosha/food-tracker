@@ -22,6 +22,7 @@ The application consists of:
 - create the database   
 `sqlite3 food_tracker.db < food_tracker.sql`  
 - Install dependencies  
+`sudo apt-get install python3-pip`   
 `pip3 install virtualenv`  
 `virtualenv -p python3 venv`  
 `source venv/bin/activate`  
